@@ -746,21 +746,23 @@ async function visitLink(link) {
             method: 'POST',
             headers: getRequestHeaders(),
             body: JSON.stringify({ url: link, html: true }),
+            signal: AbortSignal.timeout(10000)
         });
 
         if (!result.ok) {
-            console.debug(`WebSearch: visit request failed with status ${result.statusText}`, link);
-            return;
+            console.debug(`WebSearch: visit failed for ${link}`, result.statusText);
+            return null;
         }
 
         const data = await result.blob();
-        const text = await extractTextFromHTML(data, 'p'); // Only extract text from <p> tags
-        console.debug('WebSearch: visit result', link, text);
+        const text = await extractTextFromHTML(data, 'p');
         return { link, text };
     } catch (error) {
-        console.error('WebSearch: visit failed', error);
+        console.warn(`WebSearch: failed to visit ${link}`, error.message);
+        return null;
     }
 }
+
 
 /**
  * Visits the provided web link and extracts the data as a Blob.
